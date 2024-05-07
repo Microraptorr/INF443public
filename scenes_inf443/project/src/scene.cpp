@@ -3,22 +3,7 @@
 
 using namespace cgp;
 
-void deform_terrain(mesh& m)
-{
-	// Set the terrain to have a gaussian shape
-	for (int k = 0; k < m.position.size(); ++k)
-	{
-		vec3& p = m.position[k];
-		float d2 = p.x*p.x + p.y * p.y;
-		float z = exp(-d2 / 4)-1;
 
-		z = z + 0.05f*noise_perlin({ p.x,p.y });
-
-		p = { p.x, p.y, z };
-	}
-
-	m.normal_update();
-}
 
 // This function is called only once at the beginning of the program
 // This function can contain any complex operation that can be pre-computed once
@@ -44,9 +29,10 @@ void scene_structure::initialize()
 	// Create the shapes seen in the 3D scene
 	// ********************************************** //
 
-	float L = 5.0f;
-	mesh terrain_mesh = mesh_primitive_grid({ -L,-L,0 }, { L,-L,0 }, { L,L,0 }, { -L,L,0 }, 100, 100);
-	deform_terrain(terrain_mesh);
+	float L = 100.0f;
+	perlin_noise_parameters parameters;
+	mesh terrain_mesh = mesh_primitive_grid({ -L,-L,0 }, { L,-L,0 }, { L,L,0 }, { -L,L,0 }, 1000, 1000);
+	deform_terrain(terrain_mesh,parameters);
 	terrain.initialize_data_on_gpu(terrain_mesh);
 	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/sand.jpg");
 

@@ -3,6 +3,7 @@
 
 #include "cgp/cgp.hpp"
 #include "environment.hpp"
+#include "terrain.hpp"
 
 // This definitions allow to use the structures: mesh, mesh_drawable, etc. without mentionning explicitly cgp::
 using cgp::mesh;
@@ -16,6 +17,8 @@ struct gui_parameters {
 	bool display_frame = true;
 	bool display_wireframe = false;
 };
+
+
 
 // The structure of the custom scene
 struct scene_structure : cgp::scene_inputs_generic {
