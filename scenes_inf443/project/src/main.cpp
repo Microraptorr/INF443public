@@ -1,4 +1,4 @@
-
+// test Nicolas
 
 #include "cgp/cgp.hpp" // Give access to the complete CGP library
 #include "environment.hpp" // The general scene environment + project variable
