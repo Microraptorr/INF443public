@@ -4,10 +4,10 @@
 
 //Variables associated to Perlin noise
 struct perlin_noise_parameters {
-	float persistency = 0.70f;
-	float frequency_gain = 2.0f;
+	float persistency = 0.95f;
+	float frequency_gain = 1.9f;
 	int octave = 4;
-	float terrain_height = 10.0f;
+	float terrain_height = 30.0f;
 };
 
 
