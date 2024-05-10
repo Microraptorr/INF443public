@@ -56,7 +56,8 @@ struct scene_structure : cgp::scene_inputs_generic {
 
 	float speed = 0.1f;
 	float angle = 0.2; //The absolute angle which the wheels take when we turn
-	float theta; //Equals 0, angle or -angle depending on whether we're turning
+	float theta = 0.0f;
+	float theta_point;//Equals 0, angle or -angle depending on whether we're turning
 	float car_length = 1.0f;
 
 
