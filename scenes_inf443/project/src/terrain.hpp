@@ -3,15 +3,22 @@
 #include "cgp/cgp.hpp"
 
 //Variables associated to Perlin noise
-struct perlin_noise_parameters {
-	float persistency = 0.8f;
+struct terrain_parameters {
+	//Basic terrai parameters
+	float terrain_length = 100.0f;
+	int terrain_sample = 2000;
+	
+	//Perlin noise parameters
+	float persistency = 0.95f;
 	float frequency_gain = 1.9f;
 	int octave = 4;
 	float terrain_height = 1.0f;
 };
 
 
-// Initialize the mesh of the terrain
-cgp::mesh create_terrain_mesh();
 
-void deform_terrain(cgp::mesh& m, perlin_noise_parameters parameters);
+
+// Initialize the mesh of the terrain
+cgp::mesh create_terrain_mesh(float& L, int& terrain_sample);
+
+void deform_terrain(cgp::mesh& m, terrain_parameters parameters);

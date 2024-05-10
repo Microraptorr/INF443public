@@ -30,9 +30,15 @@ void scene_structure::initialize()
 	// ********************************************** //
 
 	
-	perlin_noise_parameters parameters;
-	mesh terrain_mesh = create_terrain_mesh();
+	terrain_parameters parameters;
+	L = parameters.terrain_length;
+	N = parameters.terrain_sample;
+	mesh terrain_mesh = create_terrain_mesh(L, N);
 	deform_terrain(terrain_mesh,parameters);
+	terrain_position = terrain_mesh.position;
+	terrain_normal = terrain_mesh.normal;
+	//storing position and other parameteres so as to access z coordinate in the loop
+
 	terrain.initialize_data_on_gpu(terrain_mesh);
 	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/sand.jpg",GL_REPEAT,GL_REPEAT);
 
@@ -63,6 +69,7 @@ void scene_structure::initialize()
 		project::path + "shaders/water/water.frag.glsl");
 	water.shader = water_shader;
 
+	car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
 }
 
 
@@ -72,6 +79,11 @@ void scene_structure::display_frame()
 {
 	//set the uniform parameters
 	environment.uniform_generic.uniform_float["time"] = timer.t;
+	//Choose between orbital and POV view in the GUI
+	if (!gui.pov) environment.camera_view = camera_control.camera_model.matrix_view();
+	else {
+		environment.camera_view = mat4::build_translation(0, 0, -3) * mat4::build_rotation_from_axis_angle({-1, 0, 0}, 1.4f) * mat4::build_rotation_from_axis_angle({0,0,-1}, -Pi / 2) * (inverse(car.model.rotation) * mat4::build_translation(-car.model.translation));
+	}
 
 	// Set the light to the current position of the camera
 	environment.light = camera_control.camera_model.position();
@@ -89,6 +101,36 @@ void scene_structure::display_frame()
 	/*draw(tree, environment);
 	draw(cube1, environment);*/
 
+	//Animate car with QWERTY keyboard
+	if (inputs.keyboard.is_pressed(GLFW_KEY_W)) {
+		car.model.translation += speed * (cos(theta_point) * car.model.rotation.rotation_transform::matrix_col_x() + sin(theta_point) * car.model.rotation.rotation_transform::matrix_col_y());
+	}
+	if (inputs.keyboard.is_pressed(GLFW_KEY_S)) {
+		car.model.translation -= speed * (cos(theta_point) * car.model.rotation.rotation_transform::matrix_col_x() + sin(theta_point) * car.model.rotation.rotation_transform::matrix_col_y());
+	}
+
+	//We calculate the index associated with the (x,y) coordinate of the car in order to find the z coordinate and the associated normal vector
+	int idx = std::round(N * (car.model.translation[0] + L) / (2 * L)) * N + std::round(N * (car.model.translation[1] + L) / (2 * L));
+	car.model.rotation = rotation_transform::from_vector_transform({ 0,0,1 }, terrain_normal[idx]);
+	car.model.translation[2] = terrain_position[idx][2] + car_length / 2;
+	theta_point = 0;
+
+	if (inputs.keyboard.is_pressed(GLFW_KEY_A)) {
+		theta_point = angle;
+		theta += theta_point * speed / car_length;		
+	}
+
+	if (inputs.keyboard.is_pressed(GLFW_KEY_D)) {
+		theta_point = - angle;
+		theta += theta_point * speed / car_length;
+	}
+	car.model.rotation = rotation_transform::convert_axis_angle_to_quaternion(car.model.rotation.rotation_transform::matrix_col_z(), theta) * car.model.rotation;
+	
+
+	
+
+	draw(car, environment);
+	
 	// Animate the second cube in the water
 	/*cube2.model.translation = { -1.0f, 6.0f+0.1*sin(0.5f*timer.t), -0.8f + 0.1f * cos(0.5f * timer.t)};
 	cube2.model.rotation = rotation_transform::from_axis_angle({1,-0.2,0},Pi/12.0f*sin(0.5f*timer.t));
@@ -116,6 +158,7 @@ void scene_structure::display_gui()
 {
 	ImGui::Checkbox("Frame", &gui.display_frame);
 	ImGui::Checkbox("Wireframe", &gui.display_wireframe);
+	ImGui::Checkbox("POV", &gui.pov);
 
 }
 
