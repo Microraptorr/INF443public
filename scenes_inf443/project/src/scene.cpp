@@ -66,6 +66,7 @@ void scene_structure::initialize()
 
 	cube2 = cube1;
 
+	car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
 }
 
 
@@ -73,6 +74,12 @@ void scene_structure::initialize()
 // Note that you should avoid having costly computation and large allocation defined there. This function is mostly used to call the draw() functions on pre-existing data.
 void scene_structure::display_frame()
 {
+
+	//Choose between orbital and POV view in the GUI
+	if (!gui.pov) environment.camera_view = camera_control.camera_model.matrix_view();
+	else {
+		environment.camera_view = mat4::build_translation(0, 0, -3) * mat4::build_rotation_from_axis_angle({-1, 0, 0}, 1) * mat4::build_rotation_from_axis_angle({0,0,-1}, -Pi / 2) * (inverse(car.model.rotation) * mat4::build_translation(-car.model.translation));
+	}
 
 	// Set the light to the current position of the camera
 	environment.light = camera_control.camera_model.position();
@@ -91,6 +98,26 @@ void scene_structure::display_frame()
 	draw(tree, environment);
 	draw(cube1, environment);
 
+	//Animate car with QWERTY keyboard
+	theta = 0;
+	if (inputs.keyboard.is_pressed(GLFW_KEY_A)) {
+		theta = angle;
+		car.model.rotation *= rotation_transform::convert_axis_angle_to_quaternion(car.model.rotation.rotation_transform::matrix_col_z(), theta * speed / car_length);
+	}
+	if (inputs.keyboard.is_pressed(GLFW_KEY_D)) {
+		theta = - angle;
+		car.model.rotation *= rotation_transform::convert_axis_angle_to_quaternion(car.model.rotation.rotation_transform::matrix_col_z(), theta * speed / car_length);
+	}
+	if (inputs.keyboard.is_pressed(GLFW_KEY_W)) {
+		car.model.translation += speed * (cos(theta) * car.model.rotation.rotation_transform::matrix_col_x() + sin(theta) * car.model.rotation.rotation_transform::matrix_col_y());
+	}
+	if (inputs.keyboard.is_pressed(GLFW_KEY_S)) {
+		car.model.translation -= speed * (cos(theta) * car.model.rotation.rotation_transform::matrix_col_x() + sin(theta) * car.model.rotation.rotation_transform::matrix_col_y());
+	}
+
+
+	draw(car, environment);
+	
 	// Animate the second cube in the water
 	cube2.model.translation = { -1.0f, 6.0f+0.1*sin(0.5f*timer.t), -0.8f + 0.1f * cos(0.5f * timer.t)};
 	cube2.model.rotation = rotation_transform::from_axis_angle({1,-0.2,0},Pi/12.0f*sin(0.5f*timer.t));
@@ -117,6 +144,7 @@ void scene_structure::display_gui()
 {
 	ImGui::Checkbox("Frame", &gui.display_frame);
 	ImGui::Checkbox("Wireframe", &gui.display_wireframe);
+	ImGui::Checkbox("POV", &gui.pov);
 
 }
 
