@@ -30,9 +30,15 @@ void scene_structure::initialize()
 	// ********************************************** //
 
 	
-	perlin_noise_parameters parameters;
-	mesh terrain_mesh = create_terrain_mesh();
+	terrain_parameters parameters;
+	L = parameters.terrain_length;
+	N = parameters.terrain_sample;
+	mesh terrain_mesh = create_terrain_mesh(L, N);
 	deform_terrain(terrain_mesh,parameters);
+	terrain_position = terrain_mesh.position;
+	terrain_normal = terrain_mesh.normal;
+	//storing position and other parameteres so as to access z coordinate in the loop
+
 	terrain.initialize_data_on_gpu(terrain_mesh);
 	/*terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/sand.jpg");*/
 
@@ -60,11 +66,10 @@ void scene_structure::initialize()
 // Note that you should avoid having costly computation and large allocation defined there. This function is mostly used to call the draw() functions on pre-existing data.
 void scene_structure::display_frame()
 {
-
 	//Choose between orbital and POV view in the GUI
 	if (!gui.pov) environment.camera_view = camera_control.camera_model.matrix_view();
 	else {
-		environment.camera_view = mat4::build_translation(0, 0, -3) * mat4::build_rotation_from_axis_angle({-1, 0, 0}, 1) * mat4::build_rotation_from_axis_angle({0,0,-1}, -Pi / 2) * (inverse(car.model.rotation) * mat4::build_translation(-car.model.translation));
+		environment.camera_view = mat4::build_translation(0, 0, -3) * mat4::build_rotation_from_axis_angle({-1, 0, 0}, 1.4f) * mat4::build_rotation_from_axis_angle({0,0,-1}, -Pi / 2) * (inverse(car.model.rotation) * mat4::build_translation(-car.model.translation));
 	}
 
 	// Set the light to the current position of the camera
@@ -101,6 +106,11 @@ void scene_structure::display_frame()
 		car.model.translation -= speed * (cos(theta) * car.model.rotation.rotation_transform::matrix_col_x() + sin(theta) * car.model.rotation.rotation_transform::matrix_col_y());
 	}
 
+	//We calculate the index associated with the (x,y) coordinate of the car in order to find the z coordinate and the associated normal vector
+	int idx = std::round(N * (car.model.translation[0] + L) / (2 * L)) * N + std::round(N * (car.model.translation[1] + L) / (2 * L));
+	car.model.translation[2] = terrain_position[idx][2] + car_length / 2;
+	//pour l'instant, l'orientation de la voiture rend le jeu instable.
+	//car.model.rotation *= rotation_transform::from_vector_transform(car.model.rotation.rotation_transform::matrix_col_z(), terrain_normal[idx]);
 
 	draw(car, environment);
 	

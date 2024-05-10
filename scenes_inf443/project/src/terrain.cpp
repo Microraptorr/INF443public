@@ -3,10 +3,10 @@
 
 using namespace cgp;
 
-mesh create_terrain_mesh()
+
+
+mesh create_terrain_mesh(float& L, int& terrain_sample)
 {
-	float L = 100.0f;
-	int const terrain_sample = 500;
 	mesh terrain_mesh = mesh_primitive_grid({ -L,-L,0 }, { L,-L,0 }, { L,L,0 }, { -L,L,0 }, terrain_sample, terrain_sample);
 	return terrain_mesh;
 }
@@ -31,10 +31,10 @@ float evaluate_terrain_height(float x, float y) {
 	return z;
 }
 
-void deform_terrain(mesh& m, perlin_noise_parameters parameters)
+void deform_terrain(mesh& m, terrain_parameters parameters)
 {
-	//Number of samples assuming the grid is a square
-	int const N = std::sqrt(m.position.size());
+	int const N = parameters.terrain_sample;
+	float const L = parameters.terrain_length;
 
 	// Recompute the new vertices
 	for (int ku = 0; ku < N; ++ku) {
@@ -50,8 +50,8 @@ void deform_terrain(mesh& m, perlin_noise_parameters parameters)
 			float const noise = noise_perlin({ u, v }, parameters.octave, parameters.persistency, parameters.frequency_gain);
 
 			//Compute coordinates for terrain height calculation
-			float x = ku * 200.0f / N - 100.0f;
-			float y = kv * 200.0f / N - 100.0f;
+			float x = ku * 2 * L / N - L;
+			float y = kv * 2 * L / N - L;
 
 			// use the noise as height value
 			float alt=noise*evaluate_terrain_height(x, y);
