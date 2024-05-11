@@ -17,6 +17,8 @@ struct gui_parameters {
 	bool display_frame = true;
 	bool display_wireframe = false;
 	bool pov = false;
+	int number_of_instances = 500;
+	int max_number_of_instances = 200000;
 };
 
 
@@ -49,9 +51,7 @@ struct scene_structure : cgp::scene_inputs_generic {
 	int N;
 
 	mesh_drawable water;
-	mesh_drawable tree;
-	mesh_drawable cube1;
-	mesh_drawable cube2;
+	mesh_drawable grass;
 	mesh_drawable car;
 
 	float speed = 0.1f;

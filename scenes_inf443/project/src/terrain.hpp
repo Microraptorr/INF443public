@@ -4,7 +4,7 @@
 
 //Variables associated to Perlin noise
 struct terrain_parameters {
-	//Basic terrai parameters
+	//Basic terrain parameters
 	float terrain_length = 200.0f;
 	int terrain_sample = 2000;
 	

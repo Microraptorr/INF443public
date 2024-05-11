@@ -39,15 +39,46 @@ void scene_structure::initialize()
 	terrain_normal = terrain_mesh.normal;
 	//storing position and other parameteres so as to access z coordinate in the loop
 
+
+	// set the max number of grass instances in the scene
+	//float max_number_of_instances = 2000;
+	// load the blade of grass used for the instancing
+	grass.initialize_data_on_gpu(mesh_primitive_quadrangle({ -0.5f,0.0f,0.0f }, { 0.5f,0.0f,0.0f }, { 0.5f,0.0f,1.0f }, { -0.5f,0.0f,1.0f }));
+	grass.material.phong = { 1,0,0,1 };
+	grass.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/grass.png");
+	
+
+	// add a per-instance vertex attribute
+	numarray<vec3> instance_colors(gui.max_number_of_instances);
+	numarray<vec3> instance_positions(gui.max_number_of_instances);
+	numarray<vec3> instance_orientation(gui.max_number_of_instances);
+	for (int i = 0; i < instance_colors.size(); ++i) {
+		float x = rand_interval(-100, 100);
+		float y = rand_interval(-100, 100);
+		//We calculate the index associated with the (x,y) coordinate of the grass in order to find its z coordinate
+		int idx = std::round(N * (x + L) / (2 * L)) * N + std::round(N * (y + L) / (2 * L));
+		float z = terrain_position[idx][2];
+		vec3 normal = terrain_normal[idx];
+		instance_positions[i] = {x,y,z};
+		instance_colors[i] = { x,y,1.f };
+		instance_orientation[i] = normal;
+	}
+	grass.initialize_supplementary_data_on_gpu(instance_colors, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
+	grass.initialize_supplementary_data_on_gpu(instance_positions, /*location*/ 5, /*divisor: 1=per instance, 0=per vertex*/ 1);
+
 	terrain.initialize_data_on_gpu(terrain_mesh);
 	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/sand.jpg",GL_REPEAT,GL_REPEAT);
 
+	//sea initialization
 	float sea_lim1 = 10.0f;
 	float sea_lim2 = 200.0f;
 	float sea_z = -7.0f;
 	water.initialize_data_on_gpu(mesh_primitive_grid({ sea_lim1,sea_lim1,sea_z }, { sea_lim2,sea_lim1 ,sea_z }, { sea_lim2,sea_lim2,sea_z }, { sea_lim1,sea_lim2,sea_z },100,100));
 	water.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/sea.png");
 	water.material.alpha = 0.5;
+
+	//car initialization
+	car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
 
 
 
@@ -69,7 +100,11 @@ void scene_structure::initialize()
 		project::path + "shaders/water/water.frag.glsl");
 	water.shader = water_shader;
 
-	car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
+	// to use correctly the instancing, we will need a specific shader able to treat differently each instance of the grass
+	grass.shader.load(project::path + "shaders/instancing/instancing.vert.glsl",
+					  project::path + "shaders/instancing/instancing.frag.glsl");
+
+	
 }
 
 
@@ -79,6 +114,7 @@ void scene_structure::display_frame()
 {
 	//set the uniform parameters
 	environment.uniform_generic.uniform_float["time"] = timer.t;
+
 	//Choose between orbital and POV view in the GUI
 	if (!gui.pov) environment.camera_view = camera_control.camera_model.matrix_view();
 	else {
@@ -100,6 +136,8 @@ void scene_structure::display_frame()
 	draw(terrain, environment);
 	/*draw(tree, environment);
 	draw(cube1, environment);*/
+
+
 
 	//Animate car with QWERTY keyboard
 	if (inputs.keyboard.is_pressed(GLFW_KEY_W)) {
@@ -159,6 +197,9 @@ void scene_structure::display_gui()
 	ImGui::Checkbox("Frame", &gui.display_frame);
 	ImGui::Checkbox("Wireframe", &gui.display_wireframe);
 	ImGui::Checkbox("POV", &gui.pov);
+	// Control the number of instances
+	ImGui::SliderInt("Instances", &gui.number_of_instances, 0, gui.max_number_of_instances);
+	
 
 }
 
@@ -195,11 +236,12 @@ void scene_structure::display_semiTransparent()
 
 	auto const& camera = camera_control.camera_model;
 
+
 	// Re-orient the grass shape to always face the camera direction
-	//vec3 const right = camera.right();
-	//// Rotation such that the grass follows the right-vector of the camera, while pointing toward the z-direction
-	//rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, right, { 0,0,1 });
-	//quad_1.model.rotation = R;
+	vec3 const right = camera.right();
+	// Rotation such that the grass follows the right-vector of the camera, while pointing toward the z-direction
+	rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, right, { 0,0,1 });
+	grass.model.rotation = R;
 
 
 	// Sort transparent shapes by depth to camera
@@ -224,9 +266,12 @@ void scene_structure::display_semiTransparent()
 	//	draw(quad_2, environment);
 	//}
 	draw(water, environment);
+	// Draw the instances of grass: the third parameter is the number of instances to display
+	draw(grass, environment, gui.number_of_instances);
 
 	if (gui.display_wireframe) {
 		draw_wireframe(water, environment);
+		draw_wireframe(grass, environment, { 0,0,1 }, gui.number_of_instances);
 	}
 
 	// Don't forget to re-activate the depth-buffer write
