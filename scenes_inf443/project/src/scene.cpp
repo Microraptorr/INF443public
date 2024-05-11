@@ -60,7 +60,7 @@ void scene_structure::initialize()
 		float z = terrain_position[idx][2];
 		vec3 normal = terrain_normal[idx];
 		instance_positions[i] = {x,y,z};
-		instance_colors[i] = { x,y,1.f };
+		instance_colors[i] = { rand_interval(),rand_interval(),1.f};
 		instance_orientation[i] = normal;
 	}
 	grass.initialize_supplementary_data_on_gpu(instance_colors, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
@@ -240,7 +240,7 @@ void scene_structure::display_semiTransparent()
 	// Re-orient the grass shape to always face the camera direction
 	vec3 const right = camera.right();
 	// Rotation such that the grass follows the right-vector of the camera, while pointing toward the z-direction
-	rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, right, { 0,0,1 });
+	rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, right,{0,0,1});
 	grass.model.rotation = R;
 
 
