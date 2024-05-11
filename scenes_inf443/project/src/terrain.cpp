@@ -50,6 +50,8 @@ void deform_terrain(mesh& m, terrain_parameters parameters)
 	int const N = parameters.terrain_sample;
 	float const L = parameters.terrain_length;
 
+	m.uv.resize(N * N);
+
 	// Recompute the new vertices
 	for (int ku = 0; ku < N; ++ku) {
 		for (int kv = 0; kv < N; ++kv) {
@@ -64,8 +66,8 @@ void deform_terrain(mesh& m, terrain_parameters parameters)
 			float const noise = noise_perlin({ 2*u, 2*v }, parameters.octave, parameters.persistency, parameters.frequency_gain);
 
 			//Compute coordinates for terrain height calculation
-			float x = ku * 2 * L / N - L;
-			float y = kv * 2 * L / N - L;
+			float x = ku * L / N - L/2;
+			float y = kv * L / N - L / 2;
 
 			// use the noise as height value
 			float alt=parameters.terrain_height*noise*evaluate_terrain_height(x, y);

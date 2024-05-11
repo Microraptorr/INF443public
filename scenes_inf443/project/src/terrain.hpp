@@ -5,11 +5,11 @@
 //Variables associated to Perlin noise
 struct terrain_parameters {
 	//Basic terrai parameters
-	float terrain_length = 100.0f;
+	float terrain_length = 200.0f;
 	int terrain_sample = 2000;
 	
 	//Perlin noise parameters
-	float persistency = 0.95f;
+	float persistency = 0.8f;
 	float frequency_gain = 1.9f;
 	int octave = 4;
 	float terrain_height = 1.0f;
