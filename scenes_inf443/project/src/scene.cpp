@@ -137,6 +137,18 @@ void scene_structure::display_frame()
 	/*draw(tree, environment);
 	draw(cube1, environment);*/
 
+	auto const& camera = camera_control.camera_model;
+
+
+	// Re-orient the grass shape to always face the camera direction
+	vec3 const right = camera.right();
+	// Rotation such that the grass follows the right-vector of the camera, while pointing toward the z-direction
+	rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, right, { 0,0,1 });
+	grass.model.rotation = R;
+
+	// Draw the instances of grass: the third parameter is the number of instances to display
+	draw(grass, environment, gui.number_of_instances);
+
 
 
 	//Animate car with QWERTY keyboard
@@ -176,6 +188,7 @@ void scene_structure::display_frame()
 
 	if (gui.display_wireframe) {
 		draw_wireframe(terrain, environment);
+		draw_wireframe(grass, environment, { 0,0,1 }, gui.number_of_instances);
 		/*draw_wireframe(water, environment);
 		draw_wireframe(tree, environment);
 		draw_wireframe(cube1, environment);
@@ -234,14 +247,7 @@ void scene_structure::display_semiTransparent()
 	//  - They are supposed to be display from furest to nearest elements
 	glDepthMask(false);
 
-	auto const& camera = camera_control.camera_model;
-
-
-	// Re-orient the grass shape to always face the camera direction
-	vec3 const right = camera.right();
-	// Rotation such that the grass follows the right-vector of the camera, while pointing toward the z-direction
-	rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, right,{0,0,1});
-	grass.model.rotation = R;
+	
 
 
 	// Sort transparent shapes by depth to camera
@@ -266,12 +272,10 @@ void scene_structure::display_semiTransparent()
 	//	draw(quad_2, environment);
 	//}
 	draw(water, environment);
-	// Draw the instances of grass: the third parameter is the number of instances to display
-	draw(grass, environment, gui.number_of_instances);
+	
 
 	if (gui.display_wireframe) {
 		draw_wireframe(water, environment);
-		draw_wireframe(grass, environment, { 0,0,1 }, gui.number_of_instances);
 	}
 
 	// Don't forget to re-activate the depth-buffer write
