@@ -64,7 +64,7 @@ void main()
 	// Fill the parameters sent to the fragment shader
 	fragment.position = position.xyz;
 	fragment.normal   = normal.xyz;
-	fragment.color = vertex_color * instance_color;
+	fragment.color = vertex_color*instance_color;
 	fragment.uv = vertex_uv;
 
 	// gl_Position is a built-in variable which is the expected output of the vertex shader

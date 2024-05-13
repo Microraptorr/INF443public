@@ -60,7 +60,7 @@ void scene_structure::initialize()
 		float z = terrain_position[idx][2];
 		vec3 normal = terrain_normal[idx];
 		instance_positions[i] = {x,y,z};
-		instance_colors[i] = { rand_interval(),rand_interval(),1.f};
+		instance_colors[i] = { std::abs(x/L),std::abs(y/L),1.f};
 		instance_orientation[i] = normal;
 	}
 	grass.initialize_supplementary_data_on_gpu(instance_colors, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);

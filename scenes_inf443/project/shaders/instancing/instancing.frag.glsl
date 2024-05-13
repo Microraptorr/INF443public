@@ -116,6 +116,8 @@ void main()
 	if(color_image_texture.a < 0.5){
 		discard;
 	}
+
+
 	
 	// Compute Shading
 	// *************************************** //
