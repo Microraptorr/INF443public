@@ -162,7 +162,7 @@ void scene_structure::display_frame()
 	//We calculate the index associated with the (x,y) coordinate of the car in order to find the z coordinate and the associated normal vector
 	int idx = std::round(N * (car.model.translation[0] + L) / (2 * L)) * N + std::round(N * (car.model.translation[1] + L) / (2 * L));
 	car.model.rotation = rotation_transform::from_vector_transform({ 0,0,1 }, terrain_normal[idx]);
-	car.model.translation[2] = terrain_position[idx][2] + car_length / 2;
+	car.model.translation[2] = evaluate_terrain_height(car.model.translation.x, car.model.translation.y) + car_length / 2;
 	theta_point = 0;
 
 	if (inputs.keyboard.is_pressed(GLFW_KEY_A)) {

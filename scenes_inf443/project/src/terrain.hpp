@@ -22,3 +22,5 @@ struct terrain_parameters {
 cgp::mesh create_terrain_mesh(float& L, int& terrain_sample);
 
 void deform_terrain(cgp::mesh& m, terrain_parameters parameters);
+
+float evaluate_terrain_height(float x, float y);
