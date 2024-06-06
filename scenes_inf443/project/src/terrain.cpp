@@ -47,8 +47,6 @@ float evaluate_terrain_height(float x, float y) {
 	// Compute local parametric coordinates (u,v) \in [0,1]
 	float u = (x + L / 2) * N / ((N - 1.0f)*L);
 	float v = (y + L / 2) * N / ((N - 1.0f) * L);
-	//std::cout << u << ' ' << v << '/n';
-
 	
 	float z = 0;
 	for (int i = 0; i < 23; i++) {
@@ -74,11 +72,7 @@ void deform_terrain(mesh& m, terrain_parameters parameters)
 	for (int ku = 0; ku < N; ++ku) {
 		for (int kv = 0; kv < N; ++kv) {
 
-			/*const float u = ku / (N-1.0f);
-			const float v = kv / (N-1.0f);*/
-
 			int const idx = ku * N + kv;
-
 
 			//Compute coordinates for terrain height calculation
 			float x = ku * L / N - L / 2;
