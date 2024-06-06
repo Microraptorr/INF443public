@@ -116,9 +116,22 @@ void scene_structure::display_frame()
 	environment.uniform_generic.uniform_float["time"] = timer.t;
 
 	//Choose between orbital and POV view in the GUI
-	if (!gui.pov) environment.camera_view = camera_control.camera_model.matrix_view();
+	if (!gui.pov) {
+		environment.camera_view = camera_control.camera_model.matrix_view();
+		// Re-orient the grass shape to always face the camera direction
+		auto const& camera = camera_control.camera_model;
+		vec3 const right = camera.right();
+		// Rotation such that the grass follows the right-vector of the camera, while pointing toward the z-direction
+		rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, right, { 0,0,1 });
+		grass.model.rotation = R;
+	}
 	else {
 		environment.camera_view = mat4::build_translation(0, 0, -3) * mat4::build_rotation_from_axis_angle({-1, 0, 0}, 1.4f) * mat4::build_rotation_from_axis_angle({0,0,-1}, -Pi / 2) * (inverse(car.model.rotation) * mat4::build_translation(-car.model.translation));
+		//float x = 1;
+		//float y = 0;
+		//float z = 0;
+		//rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, car.model.rotation.matrix_col_x(), {0,0,1});
+		//grass.model.rotation = R;
 	}
 
 	// Set the light to the current position of the camera
@@ -137,14 +150,10 @@ void scene_structure::display_frame()
 	/*draw(tree, environment);
 	draw(cube1, environment);*/
 
-	auto const& camera = camera_control.camera_model;
+	//coucou Nicolas je suis une pro du gaming/du coding
 
 
-	// Re-orient the grass shape to always face the camera direction
-	vec3 const right = camera.right();
-	// Rotation such that the grass follows the right-vector of the camera, while pointing toward the z-direction
-	rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, right, { 0,0,1 });
-	grass.model.rotation = R;
+	
 
 	// Draw the instances of grass: the third parameter is the number of instances to display
 	draw(grass, environment, gui.number_of_instances);
@@ -152,8 +161,10 @@ void scene_structure::display_frame()
 
 
 	//Animate car with QWERTY keyboard
+
 	if (inputs.keyboard.is_pressed(GLFW_KEY_W)) {
 		car.model.translation += speed * (cos(theta_point) * car.model.rotation.rotation_transform::matrix_col_x() + sin(theta_point) * car.model.rotation.rotation_transform::matrix_col_y());
+		v = v_max * (1 - (1 - v * exp(-alpha * timer.t)));
 	}
 	if (inputs.keyboard.is_pressed(GLFW_KEY_S)) {
 		car.model.translation -= speed * (cos(theta_point) * car.model.rotation.rotation_transform::matrix_col_x() + sin(theta_point) * car.model.rotation.rotation_transform::matrix_col_y());
@@ -163,6 +174,8 @@ void scene_structure::display_frame()
 	int idx = std::round(N * (car.model.translation[0] + L) / (2 * L)) * N + std::round(N * (car.model.translation[1] + L) / (2 * L));
 	car.model.rotation = rotation_transform::from_vector_transform({ 0,0,1 }, terrain_normal[idx]);
 	car.model.translation[2] = evaluate_terrain_height(car.model.translation.x, car.model.translation.y) + car_length / 2;
+	//car.model.translation[2] = terrain_position[idx][2] + car_length / 2;
+	//car.model.translation[2] = cgp::interpolation_bilinear(terrain_position, car.model.translation[0], car.model.translation[1]);
 	theta_point = 0;
 
 	if (inputs.keyboard.is_pressed(GLFW_KEY_A)) {
