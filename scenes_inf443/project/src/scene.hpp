@@ -55,15 +55,28 @@ struct scene_structure : cgp::scene_inputs_generic {
 	mesh_drawable car;
 
 	float v = 0.0f; //current speed
-	float v_max; //max speed
-	float v_rch; //speed reached
-	float alpha = 1;
+	float v_max = 0.25f; //max speed
+	float v_rch = 0; //speed reached
+	float alpha = 0.4f; //coefficient for exponential acceleration
+	float beta = 1.0f; //coefficient for exponential decceleration with engine brake
+	float t_0 = 0.0f;
 
 	float speed = 0.1f;
 	float angle = 0.2f; //The absolute angle which the wheels take when we turn
 	float theta = 0.0f;
 	float theta_point;//Equals 0, angle or -angle depending on whether we're turning
 	float car_length = 1.0f;
+	float car_width = car_length;
+	float car_height = car_length;
+	std::string car_status = "still";
+
+	//postions and axis used for computations
+	vec3 car_xaxis;
+	vec3 car_yaxis;
+	vec3 car_zaxis;
+	vec3 car_frontwheel;
+	vec3 car_backleftwheel;
+	vec3 car_backrightwheel;
 
 
 	// ****************************** //
