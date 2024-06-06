@@ -54,6 +54,11 @@ struct scene_structure : cgp::scene_inputs_generic {
 	mesh_drawable grass;
 	mesh_drawable car;
 
+	float v = 0.0f; //current speed
+	float v_max; //max speed
+	float v_rch; //speed reached
+	float alpha = 1;
+
 	float speed = 0.1f;
 	float angle = 0.2f; //The absolute angle which the wheels take when we turn
 	float theta = 0.0f;

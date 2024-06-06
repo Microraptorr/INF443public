@@ -81,7 +81,7 @@ void deform_terrain(mesh& m, terrain_parameters parameters)
 
 
 			//Compute coordinates for terrain height calculation
-			float x = ku * L / N - L/2;
+			float x = ku * L / N - L / 2;
 			float y = kv * L / N - L / 2;
 
 			// use the noise as height value
