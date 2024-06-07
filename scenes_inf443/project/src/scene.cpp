@@ -41,8 +41,6 @@ void scene_structure::initialize()
 	//storing position and other parameteres so as to access z coordinate in the loop
 
 
-	// set the max number of grass instances in the scene
-	//float max_number_of_instances = 2000;
 	// load the blade of grass used for the instancing
 	grass.initialize_data_on_gpu(mesh_primitive_quadrangle({ -0.5f,0.0f,0.0f }, { 0.5f,0.0f,0.0f }, { 0.5f,0.0f,1.0f }, { -0.5f,0.0f,1.0f }));
 	grass.material.phong = { 1,0,0,1 };
