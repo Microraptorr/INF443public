@@ -54,10 +54,10 @@ void scene_structure::initialize()
 	numarray<vec3> instance_positions(gui.max_number_of_instances);
 	numarray<vec3> instance_orientation(gui.max_number_of_instances);
 	for (int i = 0; i < instance_colors.size(); ++i) {
-		float x = rand_interval(-100, 100);
-		float y = rand_interval(-100, 100);
+		float x = rand_interval(-L/1.05f, L/1.05f);
+		float y = rand_interval(-L/1.05f, L/1.05f);
 		//We calculate the index associated with the (x,y) coordinate of the grass in order to find its z coordinate
-		int idx = std::round(N * (x + L) / (2 * L)) * N + std::round(N * (y + L) / (2 * L));
+		int idx = std::round(N * (x + L) / (2 * L)) *N + std::round(N * (y + L) / (2 * L));
 		float z = terrain_position[idx][2];
 		vec3 normal = terrain_normal[idx];
 		instance_positions[i] = {x,y,z};
