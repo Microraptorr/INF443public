@@ -13,6 +13,7 @@ void scene_structure::initialize()
 
 	// Set the behavior of the camera and its initial position
 	// ********************************************** //
+	camera_projection.field_of_view = 50.0f * Pi / 180;
 	camera_control.initialize(inputs, window); 
 	camera_control.set_rotation_axis_z(); // camera rotates around z-axis
 	//   look_at(camera_position, targeted_point, up_direction)
@@ -81,7 +82,7 @@ void scene_structure::initialize()
 
 	//car initialization
 	car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
-
+	//car.initialize_data_on_gpu(mesh_load_file_obj(project::path + "assets/palm_tree/KART-OBJ"));
 
 
 	/*tree.initialize_data_on_gpu(mesh_load_file_obj(project::path + "assets/palm_tree/palm_tree.obj"));
@@ -120,6 +121,7 @@ void scene_structure::display_frame()
 	//Choose between orbital and POV view in the GUI
 	if (!gui.pov) {
 		environment.camera_view = camera_control.camera_model.matrix_view();
+		camera_projection.field_of_view = 50.0f * Pi / 180;
 		// Re-orient the grass shape to always face the camera direction
 		auto const& camera = camera_control.camera_model;
 		vec3 const right = camera.right();
@@ -128,13 +130,16 @@ void scene_structure::display_frame()
 		grass.model.rotation = R;
 	}
 	else {
-		environment.camera_view = mat4::build_translation(0, 0, -3) * mat4::build_rotation_from_axis_angle({-1, 0, 0}, 1.4f) * mat4::build_rotation_from_axis_angle({0,0,-1}, -Pi / 2) * (inverse(car.model.rotation) * mat4::build_translation(-car.model.translation));
-		//float x = 1;
-		//float y = 0;
-		//float z = 0;
-		//rotation_transform R = rotation_transform::from_frame_transform({ 1,0,0 }, { 0,0,1 }, car.model.rotation.matrix_col_x(), {0,0,1});
-		//grass.model.rotation = R;
+		environment.camera_view = mat4::build_translation(0, 0, -2.5f) * mat4::build_rotation_from_axis_angle({-1, 0, 0}, 1.3f) * mat4::build_rotation_from_axis_angle({0,0,-1}, -Pi / 2) * (inverse(car.model.rotation) * mat4::build_translation(-car.model.translation));
+		
+		//camera is pulled away from the car as it speeds up
+		camera_projection.field_of_view = 50.0f * (1 + 2 * v) * Pi / 180;
+
+		rotation_transform R = rotation_transform::from_axis_angle(vec3( 0,0,1 ), Pi / 2) * car.model.rotation;
+		grass.model.rotation = R;
 	}
+
+	//std::cout << timer.t << std::endl;
 
 	// Set the light to the current position of the camera
 	environment.light = camera_control.camera_model.position();
@@ -163,21 +168,67 @@ void scene_structure::display_frame()
 
 
 	//Animate car with QWERTY keyboard
+		
+		//We start by computing and keep in memory the axis of the car so as to limit computations since this value will be used several times
 
-	if (inputs.keyboard.is_pressed(GLFW_KEY_W)) {
-		car.model.translation += speed * (cos(theta_point) * car.model.rotation.rotation_transform::matrix_col_x() + sin(theta_point) * car.model.rotation.rotation_transform::matrix_col_y());
-		v = v_max * (1 - (1 - v * exp(-alpha * timer.t)));
-	}
-	if (inputs.keyboard.is_pressed(GLFW_KEY_S)) {
-		car.model.translation -= speed * (cos(theta_point) * car.model.rotation.rotation_transform::matrix_col_x() + sin(theta_point) * car.model.rotation.rotation_transform::matrix_col_y());
-	}
+	car_xaxis = car.model.rotation.rotation_transform::matrix_col_x();
+	car_yaxis = car.model.rotation.rotation_transform::matrix_col_y();
+	car_zaxis = car.model.rotation.rotation_transform::matrix_col_z();
 
-	//We calculate the index associated with the (x,y) coordinate of the car in order to find the z coordinate and the associated normal vector
-	int idx = std::round(N * (car.model.translation[0] + L) / (2 * L)) * N + std::round(N * (car.model.translation[1] + L) / (2 * L));
-	car.model.rotation = rotation_transform::from_vector_transform({ 0,0,1 }, terrain_normal[idx]);
-	car.model.translation[2] = evaluate_terrain_height(car.model.translation.x/2, car.model.translation.y/2) + car_length / 2;
+	if (std::abs(v) < 0.0001f) { v_rch = 0;}
+	if (inputs.keyboard.is_pressed(GLFW_KEY_W) && !inputs.keyboard.is_pressed(GLFW_KEY_S)) {
+		if (car_status != "forth") {
+			t_0 = timer.t;
+			v_rch = v;
+			car_status = "forth";
+		}
+		//car.model.translation += speed * (cos(theta_point) * car_xaxis + sin(theta_point) * car_yaxis);
+		v = v_max * (1 - (1 - v_rch / v_max) * exp(-alpha * (timer.t - t_0)));
+	} else if (inputs.keyboard.is_pressed(GLFW_KEY_S) && !inputs.keyboard.is_pressed(GLFW_KEY_W)) {
+		if (car_status != "back") {
+			t_0 = timer.t;
+			v_rch = v;
+			car_status = "back";
+		}
+		//car.model.translation -= speed * (cos(theta_point) * car_xaxis + sin(theta_point) * car_yaxis);
+		v = - v_max * (1 - (1 + v_rch / v_max) * exp(-alpha * (timer.t - t_0)));
+	}
+	else {
+		if (car_status != "still") {
+			t_0 = timer.t;
+			v_rch = v;
+			car_status = "still";
+		}
+		v = v_rch * exp(-beta * (timer.t - t_0));
+	}
+	car.model.translation += v * (cos(theta_point) * car_xaxis + sin(theta_point) * car_yaxis);
+
+	car_frontwheel = car.model.translation + (car_length * car_xaxis - car_height * car_zaxis) / 2;
+	car_backleftwheel = car.model.translation - (car_width * car_yaxis + car_length * car_xaxis + car_height * car_zaxis) / 2;
+	car_backrightwheel = car.model.translation + (car_width * car_yaxis - car_length * car_xaxis - car_height * car_zaxis) / 2;
+
+		//update height with terrain
+	car_frontwheel[2] = evaluate_terrain_height(car_frontwheel[0] / 2, car_frontwheel[1] / 2);
+	car_backleftwheel[2] = evaluate_terrain_height(car_backleftwheel[0] / 2, car_backleftwheel[1] / 2);
+	car_backrightwheel[2] = evaluate_terrain_height(car_backrightwheel[0] / 2, car_backrightwheel[1] / 2);
+	car_zaxis = cross(car_backrightwheel - car_frontwheel, car_backleftwheel - car_frontwheel);
+	car_zaxis = car_zaxis / norm(car_zaxis);
+
+	car.model.rotation = rotation_transform::from_vector_transform({ 0,0,1 }, car_zaxis);
+
+	//update
+	car_xaxis = car.model.rotation.rotation_transform::matrix_col_x();
+	car_yaxis = car.model.rotation.rotation_transform::matrix_col_y();
+	car_zaxis = car.model.rotation.rotation_transform::matrix_col_z();
+	car_backleftwheel = car.model.translation - (car_width * car_yaxis + car_length * car_xaxis + car_height * car_zaxis) / 2;
+	car_backrightwheel = car.model.translation + (car_width * car_yaxis - car_length * car_xaxis - car_height * car_zaxis) / 2;
+
+
+	//calculate center displacement of car compared to center of the backwheel so that to give the correct height to the car
+	car.model.translation[2] = evaluate_terrain_height((car_backleftwheel[0] + car_backrightwheel[0])/ 4, (car_backleftwheel[1] + car_backrightwheel[1])/ 4) + dot(car_length * car_xaxis + car_height * car_zaxis, vec3(0,0,1)) / 2;
 	//car.model.translation[2] = terrain_position[idx][2] + car_length / 2;
 	//car.model.translation[2] = cgp::interpolation_bilinear(terrain_position, car.model.translation[0], car.model.translation[1]);
+
 	theta_point = 0;
 
 	if (inputs.keyboard.is_pressed(GLFW_KEY_A)) {
@@ -189,7 +240,7 @@ void scene_structure::display_frame()
 		theta_point = - angle;
 		theta += theta_point * speed / car_length;
 	}
-	car.model.rotation = rotation_transform::convert_axis_angle_to_quaternion(car.model.rotation.rotation_transform::matrix_col_z(), theta) * car.model.rotation;
+	car.model.rotation = rotation_transform::convert_axis_angle_to_quaternion(car_zaxis, theta) * car.model.rotation;
 	
 
 	
