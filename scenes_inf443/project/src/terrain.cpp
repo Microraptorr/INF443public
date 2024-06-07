@@ -83,7 +83,7 @@ void deform_terrain(mesh& m, terrain_parameters parameters)
 			m.position[idx].z = alt;
 
 			// use also the noise as color valuex
-			if (alt > -3) m.color[idx] = 0.7f * vec3(0, 0.5f, 0) + 0.8f * alt / 45.0 * vec3(1, 1, 1);
+			if (alt > -3) m.color[idx] = 0.7f * vec3(0, 0.5f, 0) + 0.8f * alt / 55.0 * vec3(1, 1, 1);
 			else if (alt > -7 && alt < -3) m.color[idx] = 2.5*vec3(0.231, 0.224, 0.109);
 			else m.color[idx] = 0.5f*vec3(1,1,1);
 
@@ -94,3 +94,13 @@ void deform_terrain(mesh& m, terrain_parameters parameters)
 	m.normal_update();
 }
 
+void create_circuit(terrain_parameters parameters) {
+	float* x = new float[parameters.number_of_gates];
+	float* y = new float[parameters.number_of_gates];
+	for (int i = 0; i < parameters.number_of_gates; i++) {
+		x[i] = rand_interval(-100, 100);
+		y[i] = rand_interval(-100, 100);
+		std::cout << x[i] << "          " << y[i] << '\n';
+	}
+
+}
