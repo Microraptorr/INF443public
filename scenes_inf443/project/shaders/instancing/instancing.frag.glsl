@@ -18,6 +18,7 @@ in struct fragment_data
     vec3 normal;   // normal in the world space
     vec3 color;    // current color on the fragment
     vec2 uv;       // current uv-texture on the fragment
+	vec2 hue;//hue to apply to the billboard according to its altitude
 
 } fragment;
 
@@ -29,6 +30,8 @@ layout(location=0) out vec4 FragColor;
 // ***************************************************** //
 
 uniform sampler2D image_texture;   // Texture image identifiant
+
+uniform sampler2D hue_texture;//Hue of the grass (as a texture)
 
 uniform mat4 view;       // View matrix (rigid transform) of the camera - to compute the camera position
 
@@ -112,6 +115,10 @@ void main()
 		color_image_texture=vec4(1.0,1.0,1.0,1.0);
 	}
 
+	//Apply hue according to altitude
+	vec2 uv_hue=fragment.hue;
+	vec4 hue_image_texture=texture(hue_texture,uv_hue);
+
 	// Fully discard the pixel if the alpha value is less than a given threshold.
 	if(color_image_texture.a < 0.5){
 		discard;
@@ -123,7 +130,7 @@ void main()
 	// *************************************** //
 
 	// Compute the base color of the object based on: vertex color, uniform color, and texture
-	vec3 color_object  = fragment.color * material.color * color_image_texture.rgb;
+	vec3 color_object  = fragment.color * material.color * color_image_texture.rgb*hue_image_texture.rgb;
 
 	// Compute the final shaded color using Phong model
 	float Ka = material.phong.ambient;

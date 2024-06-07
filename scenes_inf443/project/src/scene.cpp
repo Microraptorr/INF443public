@@ -49,7 +49,7 @@ void scene_structure::initialize()
 	
 
 	// add a per-instance vertex attribute
-	numarray<vec3> instance_colors(gui.max_number_of_instances);
+	numarray<vec2> instance_colors(gui.max_number_of_instances);
 	numarray<vec3> instance_positions(gui.max_number_of_instances);
 	numarray<vec3> instance_orientation(gui.max_number_of_instances);
 	for (int i = 0; i < instance_colors.size(); ++i) {
@@ -60,9 +60,11 @@ void scene_structure::initialize()
 		float z = terrain_position[idx][2];
 		vec3 normal = terrain_normal[idx];
 		instance_positions[i] = {x,y,z};
-		instance_colors[i] = { std::abs(x/L),std::abs(y/L),std::abs(z/L)};
+		instance_colors[i] = {std::abs(2*z/L),0.0f};
 		instance_orientation[i] = normal;
 	}
+	grass.supplementary_texture["hue_texture"].load_and_initialize_texture_2d_on_gpu(project::path + "assets/grass_hue.jpg");
+
 	grass.initialize_supplementary_data_on_gpu(instance_colors, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
 	grass.initialize_supplementary_data_on_gpu(instance_positions, /*location*/ 5, /*divisor: 1=per instance, 0=per vertex*/ 1);
 
@@ -173,7 +175,7 @@ void scene_structure::display_frame()
 	//We calculate the index associated with the (x,y) coordinate of the car in order to find the z coordinate and the associated normal vector
 	int idx = std::round(N * (car.model.translation[0] + L) / (2 * L)) * N + std::round(N * (car.model.translation[1] + L) / (2 * L));
 	car.model.rotation = rotation_transform::from_vector_transform({ 0,0,1 }, terrain_normal[idx]);
-	car.model.translation[2] = evaluate_terrain_height(car.model.translation.x, car.model.translation.y) + car_length / 2;
+	car.model.translation[2] = evaluate_terrain_height(car.model.translation.x/2, car.model.translation.y/2) + car_length / 2;
 	//car.model.translation[2] = terrain_position[idx][2] + car_length / 2;
 	//car.model.translation[2] = cgp::interpolation_bilinear(terrain_position, car.model.translation[0], car.model.translation[1]);
 	theta_point = 0;

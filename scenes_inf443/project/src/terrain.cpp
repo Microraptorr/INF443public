@@ -88,7 +88,7 @@ void deform_terrain(mesh& m, terrain_parameters parameters)
 			else m.color[idx] = 0.5f*vec3(1,1,1);
 
 			//set texture 
-			m.uv[kv + N * ku] = { ku/(N-1.0f),kv/(N-1.0f)};
+			m.uv[ku + N * kv] = { ku/(N-1.0f),kv/(N-1.0f)};
 		}
 	}
 	m.normal_update();

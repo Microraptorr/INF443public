@@ -7,7 +7,7 @@ layout (location = 0) in vec3 vertex_position; // vertex position in local space
 layout (location = 1) in vec3 vertex_normal;   // vertex normal in local space   (nx,ny,nz)
 layout (location = 2) in vec3 vertex_color;    // vertex color      (r,g,b)
 layout (location = 3) in vec2 vertex_uv;       // vertex uv-texture (u,v)
-layout (location = 4) in vec3 instance_color;  // instance color    (r,g,b)
+layout(location = 4) in vec2 hue;
 layout (location = 5) in vec3 instance_position;//instance position (x,y,z)
 
 // Output variables sent to the fragment shader
@@ -17,6 +17,7 @@ out struct fragment_data
     vec3 normal;   // normal position in world space
     vec3 color;    // vertex color
     vec2 uv;       // vertex uv
+	vec2 hue;//color to apply to the billboard according to its altitude
 } fragment;
 
 // Uniform variables expected to receive from the C++ program
@@ -64,8 +65,9 @@ void main()
 	// Fill the parameters sent to the fragment shader
 	fragment.position = position.xyz;
 	fragment.normal   = normal.xyz;
-	fragment.color = vertex_color*instance_color;
+	fragment.color = vertex_color;
 	fragment.uv = vertex_uv;
+	fragment.hue=hue;
 
 	// gl_Position is a built-in variable which is the expected output of the vertex shader
 	gl_Position = position_projected; // gl_Position is the projected vertex position (in normalized device coordinates)
