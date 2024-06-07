@@ -17,6 +17,7 @@ struct gui_parameters {
 	bool display_frame = true;
 	bool display_wireframe = false;
 	bool pov = false;
+	bool pov_race;
 	int number_of_instances = 500;
 	int max_number_of_instances = 200000;
 };
@@ -54,22 +55,17 @@ struct scene_structure : cgp::scene_inputs_generic {
 	mesh_drawable grass;
 	mesh_drawable car;
 
+		//parameters used to animate the car
 	float v = 0.0f; //current speed
 	float v_max = 0.25f; //max speed
 	float v_rch = 0; //speed reached
 	float alpha = 0.4f; //coefficient for exponential acceleration
 	float beta = 1.0f; //coefficient for exponential decceleration with engine brake
-	float t_0 = 0.0f;
-
-	float speed = 0.1f;
+	float t_0 = 0.0f; //initial timecode of a give phase of acceleration
 	float angle = 0.2f; //The absolute angle which the wheels take when we turn
-	float theta = 0.0f;
+	float theta = 0.0f; //Angle of the car along the z-axis
 	float theta_point;//Equals 0, angle or -angle depending on whether we're turning
-	float car_length = 1.0f;
-	float car_width = car_length;
-	float car_height = car_length;
-	std::string car_status = "still";
-
+	std::string car_status = "still"; //keeps the current phase of the car acceleration "still, forth, back" in memory
 	//postions and axis used for computations
 	vec3 car_xaxis;
 	vec3 car_yaxis;
@@ -77,6 +73,20 @@ struct scene_structure : cgp::scene_inputs_generic {
 	vec3 car_frontwheel;
 	vec3 car_backleftwheel;
 	vec3 car_backrightwheel;
+
+	float car_length = 1.0f;
+	float car_width = car_length;
+	float car_height = car_length;
+
+		//parameters used to control race mode
+	bool race_init = false;
+	float t_start;
+	float chrono;
+	std::vector<affine> current_path;
+	std::vector<affine> best_path;
+	
+
+
 
 
 	// ****************************** //

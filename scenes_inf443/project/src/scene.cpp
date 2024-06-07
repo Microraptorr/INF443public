@@ -50,22 +50,20 @@ void scene_structure::initialize()
 	
 
 	// add a per-instance vertex attribute
-	numarray<vec2> instance_colors(gui.max_number_of_instances);
+	numarray<vec3> instance_colors(gui.max_number_of_instances);
 	numarray<vec3> instance_positions(gui.max_number_of_instances);
 	numarray<vec3> instance_orientation(gui.max_number_of_instances);
 	for (int i = 0; i < instance_colors.size(); ++i) {
-		float x = rand_interval(-L/1.05f, L/1.05f);
-		float y = rand_interval(-L/1.05f, L/1.05f);
+		float x = rand_interval(-100, 100);
+		float y = rand_interval(-100, 100);
 		//We calculate the index associated with the (x,y) coordinate of the grass in order to find its z coordinate
-		int idx = std::round(N * (x + L) / (2 * L)) *N + std::round(N * (y + L) / (2 * L));
+		int idx = std::round(N * (x + L) / (2 * L)) * N + std::round(N * (y + L) / (2 * L));
 		float z = terrain_position[idx][2];
 		vec3 normal = terrain_normal[idx];
 		instance_positions[i] = {x,y,z};
-		instance_colors[i] = {std::abs(2*z/L),0.0f};
+		instance_colors[i] = { std::abs(x/L),std::abs(y/L),std::abs(z/L)};
 		instance_orientation[i] = normal;
 	}
-	grass.supplementary_texture["hue_texture"].load_and_initialize_texture_2d_on_gpu(project::path + "assets/grass_hue.jpg");
-
 	grass.initialize_supplementary_data_on_gpu(instance_colors, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
 	grass.initialize_supplementary_data_on_gpu(instance_positions, /*location*/ 5, /*divisor: 1=per instance, 0=per vertex*/ 1);
 
@@ -119,7 +117,7 @@ void scene_structure::display_frame()
 	environment.uniform_generic.uniform_float["time"] = timer.t;
 
 	//Choose between orbital and POV view in the GUI
-	if (!gui.pov) {
+	if (!gui.pov && !gui.pov_race) {
 		environment.camera_view = camera_control.camera_model.matrix_view();
 		camera_projection.field_of_view = 50.0f * Pi / 180;
 		// Re-orient the grass shape to always face the camera direction
@@ -139,27 +137,17 @@ void scene_structure::display_frame()
 		grass.model.rotation = R;
 	}
 
-	//std::cout << timer.t << std::endl;
-
 	// Set the light to the current position of the camera
 	environment.light = camera_control.camera_model.position();
 
 	// Update time
 	timer.update();
 
-	// conditional display of the global frame (set via the GUI)
-	if (gui.display_frame)
-		draw(global_frame, environment);
-	
 
 	// Draw all the shapes
 	draw(terrain, environment);
 	/*draw(tree, environment);
 	draw(cube1, environment);*/
-
-	//coucou Nicolas je suis une pro du gaming/du coding
-
-
 	
 
 	// Draw the instances of grass: the third parameter is the number of instances to display
@@ -182,7 +170,6 @@ void scene_structure::display_frame()
 			v_rch = v;
 			car_status = "forth";
 		}
-		//car.model.translation += speed * (cos(theta_point) * car_xaxis + sin(theta_point) * car_yaxis);
 		v = v_max * (1 - (1 - v_rch / v_max) * exp(-alpha * (timer.t - t_0)));
 	} else if (inputs.keyboard.is_pressed(GLFW_KEY_S) && !inputs.keyboard.is_pressed(GLFW_KEY_W)) {
 		if (car_status != "back") {
@@ -190,7 +177,6 @@ void scene_structure::display_frame()
 			v_rch = v;
 			car_status = "back";
 		}
-		//car.model.translation -= speed * (cos(theta_point) * car_xaxis + sin(theta_point) * car_yaxis);
 		v = - v_max * (1 - (1 + v_rch / v_max) * exp(-alpha * (timer.t - t_0)));
 	}
 	else {
@@ -226,26 +212,34 @@ void scene_structure::display_frame()
 
 	//calculate center displacement of car compared to center of the backwheel so that to give the correct height to the car
 	car.model.translation[2] = evaluate_terrain_height((car_backleftwheel[0] + car_backrightwheel[0])/ 4, (car_backleftwheel[1] + car_backrightwheel[1])/ 4) + dot(car_length * car_xaxis + car_height * car_zaxis, vec3(0,0,1)) / 2;
-	//car.model.translation[2] = terrain_position[idx][2] + car_length / 2;
-	//car.model.translation[2] = cgp::interpolation_bilinear(terrain_position, car.model.translation[0], car.model.translation[1]);
 
 	theta_point = 0;
 
 	if (inputs.keyboard.is_pressed(GLFW_KEY_A)) {
 		theta_point = angle;
-		theta += theta_point * speed / car_length;		
+		theta += theta_point * v / car_length;		
 	}
 
 	if (inputs.keyboard.is_pressed(GLFW_KEY_D)) {
 		theta_point = - angle;
-		theta += theta_point * speed / car_length;
+		theta += theta_point * v / car_length;
 	}
 	car.model.rotation = rotation_transform::convert_axis_angle_to_quaternion(car_zaxis, theta) * car.model.rotation;
 	
-
-	
-
 	draw(car, environment);
+
+		//Animate race mode
+	if (gui.pov_race) {
+		if (!race_init) {
+			race_init = true;
+			t_start = timer.t + 5.0f;
+		}
+		chrono = timer.t - t_start;
+		ImGui::Text("Chronomètre de la course : %.2f", chrono);
+		std::cout << current_path.size() << std::endl;
+		current_path.push_back(car.model);
+	}
+	else {race_init = false;}
 	
 	// Animate the second cube in the water
 	/*cube2.model.translation = { -1.0f, 6.0f+0.1*sin(0.5f*timer.t), -0.8f + 0.1f * cos(0.5f * timer.t)};
@@ -260,6 +254,11 @@ void scene_structure::display_frame()
 		draw_wireframe(cube1, environment);
 		draw_wireframe(cube2, environment);*/
 	}
+
+	// conditional display of the global frame (set via the GUI)
+	if (gui.display_frame)
+		draw(global_frame, environment);
+
 	
 	// We display the semi-transparent shapes after the non-transparent ones 
 	//   (as semi-transparent shapes are not associated to depth buffer write)
@@ -275,7 +274,9 @@ void scene_structure::display_gui()
 {
 	ImGui::Checkbox("Frame", &gui.display_frame);
 	ImGui::Checkbox("Wireframe", &gui.display_wireframe);
-	ImGui::Checkbox("POV", &gui.pov);
+	ImGui::Checkbox("POV - open_world", &gui.pov);
+	ImGui::Checkbox("POV - race", &gui.pov_race);
+
 	// Control the number of instances
 	ImGui::SliderInt("Instances", &gui.number_of_instances, 0, gui.max_number_of_instances);
 	
