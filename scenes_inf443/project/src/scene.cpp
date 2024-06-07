@@ -48,20 +48,21 @@ void scene_structure::initialize()
 	
 
 	// add a per-instance vertex attribute
-	numarray<vec3> instance_colors(gui.max_number_of_instances);
+	numarray<vec2> instance_colors(gui.max_number_of_instances);
 	numarray<vec3> instance_positions(gui.max_number_of_instances);
 	numarray<vec3> instance_orientation(gui.max_number_of_instances);
 	for (int i = 0; i < instance_colors.size(); ++i) {
-		float x = rand_interval(-100, 100);
-		float y = rand_interval(-100, 100);
+		float x = rand_interval(-L / 1.05f, L / 1.05f);
+		float y = rand_interval(-L / 1.05f, L / 1.05f);
 		//We calculate the index associated with the (x,y) coordinate of the grass in order to find its z coordinate
 		int idx = std::round(N * (x + L) / (2 * L)) * N + std::round(N * (y + L) / (2 * L));
 		float z = terrain_position[idx][2];
 		vec3 normal = terrain_normal[idx];
 		instance_positions[i] = {x,y,z};
-		instance_colors[i] = { std::abs(x/L),std::abs(y/L),std::abs(z/L)};
+		instance_colors[i] = { std::abs(2 * z / L),0.0f };
 		instance_orientation[i] = normal;
 	}
+	grass.supplementary_texture["hue_texture"].load_and_initialize_texture_2d_on_gpu(project::path + "assets/grass_hue.jpg");
 	grass.initialize_supplementary_data_on_gpu(instance_colors, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
 	grass.initialize_supplementary_data_on_gpu(instance_positions, /*location*/ 5, /*divisor: 1=per instance, 0=per vertex*/ 1);
 
