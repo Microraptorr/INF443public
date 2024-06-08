@@ -93,14 +93,3 @@ void deform_terrain(mesh& m, terrain_parameters parameters)
 	}
 	m.normal_update();
 }
-
-void create_circuit(terrain_parameters parameters) {
-	float* x = new float[parameters.number_of_gates];
-	float* y = new float[parameters.number_of_gates];
-	for (int i = 0; i < parameters.number_of_gates; i++) {
-		x[i] = rand_interval(-100, 100);
-		y[i] = rand_interval(-100, 100);
-		std::cout << x[i] << "          " << y[i] << '\n';
-	}
-
-}

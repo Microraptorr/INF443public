@@ -27,3 +27,10 @@ void Gate::draw(environment_generic_structure const& environment) {
 	cgp::draw(left, environment);
 	cgp::draw(right, environment);
 }
+
+bool Gate::is_reached(vec3 car_pos,vec3 old_car_pos) {
+	float a = (right.model.translation.y - left.model.translation.y) / (right.model.translation.x - left.model.translation.x);
+	float b = right.model.translation.y - a * right.model.translation.x;
+	if ((car_pos.y < a * car_pos.x + b && old_car_pos.y>a * old_car_pos.x + b) || (car_pos.y > a * car_pos.x + b && old_car_pos.y<a * old_car_pos.x + b)) return true;
+	else return false;
+}

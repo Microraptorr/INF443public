@@ -106,6 +106,10 @@ void scene_structure::initialize()
 	vec3 gatepos[16] = { {-27,-34,0},{-49,-12,0},{-93,-13,0},{-140,-5,0}, {-149,44,0},{-126,111,0},{-33,172,0},{68,147,0},{147,156,0},{177,55,0},{129,-10,0},{62,-49,0},{34,-94,0},{0,-95,0},{-12,-84,0},{-25,63,0} };
 	float gate_orientation[16] = { 0,30,60,90,135,0,30,60,90,135,0,30,60,90,135,0 };
 	for (int i=0;i<16;i++){
+	gates = new Gate[20];
+	vec3 gatepos[20] = { {-27,-34,0},{-49,-12,0},{-93,-13,0},{-133,-7,0}, { -158,1,0 }, {-149,44,0},{-126,111,0},{-33,172,0},{68,147,0},{147,156,0},{177,55,0},{129,-10,0},{62,-49,0},{56,-60,0}, { 34,-94,0 },{18,-103,0}, { 0,-95,0 },{-12,-84,0}, {-25,-68,0},{-32,-52,0} };
+	float gate_orientation[20] = { 0,215,60,45,195,315,0,30,105,180,135,90,90,135,285,90,90,315,0,0 };
+	for (int i=0;i<20;i++){
 		gates[i].initialize(gatepos[i], gate_orientation[i]);
 	}
 	//car.initialize_data_on_gpu(mesh_load_file_obj(project::path + "assets/palm_tree/KART-OBJ"));
@@ -170,11 +174,9 @@ void scene_structure::display_frame()
 
 	// Draw all the shapes
 	draw(terrain, environment);
-	for (int i = 0; i < 16; i++) {
+	for (int i = 0; i < 20; i++) {
 		gates[i].draw(environment);
 	}
-
-	std::cout << car.model.translation.x << ' ' << car.model.translation.y << '\n';
 	/*draw(tree, environment);
 	draw(cube1, environment);*/
 	
