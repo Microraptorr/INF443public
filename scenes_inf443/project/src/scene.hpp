@@ -91,10 +91,10 @@ struct scene_structure : cgp::scene_inputs_generic {
 	bool best_exist = false; //true if there is already a registered best time. If there is, the ghost will be displayed
 	float best_time;
 	float t_start;
-	float x_start = - 26.9;
-	float y_start = -34.6;
+	float x_start = - 26.9f;
+	float y_start = -34.6f;
 	float theta_start = Pi / 2;
-	float chrono = -1;
+	float chrono = -1.0f;
 	int frame_count = 0; //counts the number of frame since we start displaying the ghost
 	std::vector<affine> current_path;
 	std::vector<affine> best_path;

@@ -102,15 +102,16 @@ void scene_structure::initialize()
 	ghost_car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
 
 	//gate initialization
-	gates = new Gate[16];
+	/*gates = new Gate[16];
 	vec3 gatepos[16] = { {-27,-34,0},{-49,-12,0},{-93,-13,0},{-140,-5,0}, {-149,44,0},{-126,111,0},{-33,172,0},{68,147,0},{147,156,0},{177,55,0},{129,-10,0},{62,-49,0},{34,-94,0},{0,-95,0},{-12,-84,0},{-25,63,0} };
 	float gate_orientation[16] = { 0,30,60,90,135,0,30,60,90,135,0,30,60,90,135,0 };
-	for (int i=0;i<16;i++){
+	for (int i=0;i<16;i++){*/
 	gates = new Gate[20];
 	vec3 gatepos[20] = { {-27,-34,0},{-49,-12,0},{-93,-13,0},{-133,-7,0}, { -158,1,0 }, {-149,44,0},{-126,111,0},{-33,172,0},{68,147,0},{147,156,0},{177,55,0},{129,-10,0},{62,-49,0},{56,-60,0}, { 34,-94,0 },{18,-103,0}, { 0,-95,0 },{-12,-84,0}, {-25,-68,0},{-32,-52,0} };
 	float gate_orientation[20] = { 0,215,60,45,195,315,0,30,105,180,135,90,90,135,285,90,90,315,0,0 };
+	bool are_flipped[20] = { false, false, true, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false };
 	for (int i=0;i<20;i++){
-		gates[i].initialize(gatepos[i], gate_orientation[i]);
+		gates[i].initialize(gatepos[i], gate_orientation[i], are_flipped[i]);
 	}
 	//car.initialize_data_on_gpu(mesh_load_file_obj(project::path + "assets/palm_tree/KART-OBJ"));
 
@@ -172,11 +173,7 @@ void scene_structure::display_frame()
 	timer.update();
 
 
-	// Draw all the shapes
-	draw(terrain, environment);
-	for (int i = 0; i < 20; i++) {
-		gates[i].draw(environment);
-	}
+	
 	/*draw(tree, environment);
 	draw(cube1, environment);*/
 	
@@ -269,6 +266,18 @@ void scene_structure::display_frame()
 	
 	draw(car, environment);
 
+	// Draw all the shapes
+	draw(terrain, environment);
+	for (int i = 0; i < 20; i++) {
+		gates[i].draw(environment);
+		if (chrono > 0) {
+			if (gates[i].is_reached(current_path.back().translation, car.model.translation)){std::cout << i << std::endl;}
+			//std::cout << current_path.back().translation.x << std::endl;
+		}
+
+	}
+	
+
 		//Animate race mode
 	if (gui.pov_race) {
 		if (!race_init) {
@@ -283,7 +292,6 @@ void scene_structure::display_frame()
 		}
 		chrono = timer.t - t_start;
 		ImGui::Text("Chrono de la course : %.2f", chrono);
-		std::cout << car.model.translation.x << "    " << car.model.translation.y << "     " << evaluate_terrain_height(car.model.translation.x / 2, car.model.translation.y / 2) << std::endl;
 		current_path.push_back(car.model);
 		if (best_exist) {
 			ImGui::Text("Meilleur temps : %.2f", best_time);
