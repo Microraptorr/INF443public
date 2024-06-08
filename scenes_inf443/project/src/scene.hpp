@@ -56,6 +56,7 @@ struct scene_structure : cgp::scene_inputs_generic {
 	mesh_drawable water;
 	mesh_drawable grass;
 	mesh_drawable car;
+	mesh_drawable ghost_car;
 	mesh_drawable trees;
 	const int trees_nb = 15;
 	numarray<vec3> trees_positions;
@@ -87,10 +88,17 @@ struct scene_structure : cgp::scene_inputs_generic {
 
 		//parameters used to control race mode
 	bool race_init = false;
+	bool best_exist = false; //true if there is already a registered best time. If there is, the ghost will be displayed
+	float best_time;
 	float t_start;
-	float chrono;
+	float x_start = - 26.9;
+	float y_start = -34.6;
+	float theta_start = Pi / 2;
+	float chrono = -1;
+	int frame_count = 0; //counts the number of frame since we start displaying the ghost
 	std::vector<affine> current_path;
 	std::vector<affine> best_path;
+	int gate_count;
 	
 
 

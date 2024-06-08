@@ -99,14 +99,15 @@ void scene_structure::initialize()
 
 	//car initialization
 	car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
+	ghost_car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
 
 	//gate initialization
-	/*gates = new Gate[16];
+	gates = new Gate[16];
 	vec3 gatepos[16] = { {-27,-34,0},{-49,-12,0},{-93,-13,0},{-140,-5,0}, {-149,44,0},{-126,111,0},{-33,172,0},{68,147,0},{147,156,0},{177,55,0},{129,-10,0},{62,-49,0},{34,-94,0},{0,-95,0},{-12,-84,0},{-25,63,0} };
 	float gate_orientation[16] = { 0,30,60,90,135,0,30,60,90,135,0,30,60,90,135,0 };
 	for (int i=0;i<16;i++){
 		gates[i].initialize(gatepos[i], gate_orientation[i]);
-	}*/
+	}
 	//car.initialize_data_on_gpu(mesh_load_file_obj(project::path + "assets/palm_tree/KART-OBJ"));
 
 
@@ -198,29 +199,33 @@ void scene_structure::display_frame()
 	car_zaxis = car.model.rotation.rotation_transform::matrix_col_z();
 
 	if (std::abs(v) < 0.0001f) { v_rch = 0;}
-	if (inputs.keyboard.is_pressed(GLFW_KEY_W) && !inputs.keyboard.is_pressed(GLFW_KEY_S)) {
-		if (car_status != "forth") {
-			t_0 = timer.t;
-			v_rch = v;
-			car_status = "forth";
+	if (!(gui.pov_race && chrono < 0)){
+		if (inputs.keyboard.is_pressed(GLFW_KEY_W) && !inputs.keyboard.is_pressed(GLFW_KEY_S)) {
+			if (car_status != "forth") {
+				t_0 = timer.t;
+				v_rch = v;
+				car_status = "forth";
+			}
+			v = v_max * (1 - (1 - v_rch / v_max) * exp(-alpha * (timer.t - t_0)));
 		}
-		v = v_max * (1 - (1 - v_rch / v_max) * exp(-alpha * (timer.t - t_0)));
-	} else if (inputs.keyboard.is_pressed(GLFW_KEY_S) && !inputs.keyboard.is_pressed(GLFW_KEY_W)) {
-		if (car_status != "back") {
-			t_0 = timer.t;
-			v_rch = v;
-			car_status = "back";
+		else if (inputs.keyboard.is_pressed(GLFW_KEY_S) && !inputs.keyboard.is_pressed(GLFW_KEY_W)) {
+			if (car_status != "back") {
+				t_0 = timer.t;
+				v_rch = v;
+				car_status = "back";
+			}
+			v = -v_max * (1 - (1 + v_rch / v_max) * exp(-alpha * (timer.t - t_0)));
 		}
-		v = - v_max * (1 - (1 + v_rch / v_max) * exp(-alpha * (timer.t - t_0)));
+		else {
+			if (car_status != "still") {
+				t_0 = timer.t;
+				v_rch = v;
+				car_status = "still";
+			}
+			v = v_rch * exp(-beta * (timer.t - t_0));
+		}
 	}
-	else {
-		if (car_status != "still") {
-			t_0 = timer.t;
-			v_rch = v;
-			car_status = "still";
-		}
-		v = v_rch * exp(-beta * (timer.t - t_0));
-	}
+	
 	car.model.translation += v * (cos(theta_point) * car_xaxis + sin(theta_point) * car_yaxis);
 
 	car_frontwheel = car.model.translation + (car_length * car_xaxis - car_height * car_zaxis) / 2;
@@ -267,13 +272,26 @@ void scene_structure::display_frame()
 		if (!race_init) {
 			race_init = true;
 			t_start = timer.t + 5.0f;
+			gate_count = 0;
+			car.model.translation = { x_start, y_start, evaluate_terrain_height(x_start / 2, y_start / 2) };
+			theta = theta_start;
+			v = 0;
+			v_rch = 0;
+			car_status = "still";
 		}
 		chrono = timer.t - t_start;
-		ImGui::Text("Chronom�tre de la course : %.2f", chrono);
+		ImGui::Text("Chrono de la course : %.2f", chrono);
 		std::cout << car.model.translation.x << "    " << car.model.translation.y << "     " << evaluate_terrain_height(car.model.translation.x / 2, car.model.translation.y / 2) << std::endl;
 		current_path.push_back(car.model);
+		if (best_exist) {
+			ImGui::Text("Meilleur temps : %.2f", best_time);
+			ghost_car.model = best_path[frame_count];
+			frame_count++;
+		}
 	}
-	else {race_init = false;}
+	else {
+		race_init = false;
+	}
 	
 	// Animate the second cube in the water
 	/*cube2.model.translation = { -1.0f, 6.0f+0.1*sin(0.5f*timer.t), -0.8f + 0.1f * cos(0.5f * timer.t)};
