@@ -66,6 +66,26 @@ void scene_structure::initialize()
 	grass.initialize_supplementary_data_on_gpu(instance_colors, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
 	grass.initialize_supplementary_data_on_gpu(instance_positions, /*location*/ 5, /*divisor: 1=per instance, 0=per vertex*/ 1);
 
+
+	//Define at random positions for palm trees, restricting them to the beach
+	
+	int j = 0;
+	while (j < trees_nb) {
+		float x = rand_interval(-L / 1.05f, L / 1.05f);
+		float y = rand_interval(-L / 1.05f, L / 1.05f);
+		//We calculate the index associated with the (x,y) coordinate of the palm tree in order to find its z coordinate
+		int idx = std::round(N * (x + L) / (2 * L)) * N + std::round(N * (y + L) / (2 * L));
+		float z = terrain_position[idx][2];
+		if (z < -3 && z > -7) {
+			trees_positions.push_back(vec3({ x,y,z }));
+			j += 1;
+		}
+	}
+	trees.initialize_data_on_gpu(mesh_load_file_obj(project::path + "assets/palm_tree/palm_tree.obj"));
+	trees.model.rotation = rotation_transform::from_axis_angle({ 1,0,0 }, Pi / 2.0f);
+	trees.model.scaling = 3;
+	trees.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/palm_tree/palm_tree.jpg", GL_REPEAT, GL_REPEAT);
+
 	terrain.initialize_data_on_gpu(terrain_mesh);
 	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/sand.jpg",GL_REPEAT,GL_REPEAT);
 
@@ -82,9 +102,7 @@ void scene_structure::initialize()
 	//car.initialize_data_on_gpu(mesh_load_file_obj(project::path + "assets/palm_tree/KART-OBJ"));
 
 
-	/*tree.initialize_data_on_gpu(mesh_load_file_obj(project::path + "assets/palm_tree/palm_tree.obj"));
-	tree.model.rotation = rotation_transform::from_axis_angle({ 1,0,0 }, Pi / 2.0f);
-	tree.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/palm_tree/palm_tree.jpg", GL_REPEAT, GL_REPEAT);*/
+
 
 	/*cube1.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, 0.5f));
 	cube1.model.rotation = rotation_transform::from_axis_angle({ -1,1,0 }, Pi / 7.0f);
@@ -103,8 +121,6 @@ void scene_structure::initialize()
 	// to use correctly the instancing, we will need a specific shader able to treat differently each instance of the grass
 	grass.shader.load(project::path + "shaders/instancing/instancing.vert.glsl",
 					  project::path + "shaders/instancing/instancing.frag.glsl");
-
-	
 }
 
 
@@ -145,12 +161,18 @@ void scene_structure::display_frame()
 
 	// Draw all the shapes
 	draw(terrain, environment);
-	/*draw(tree, environment);
-	draw(cube1, environment);*/
+	//draw(trees, environment);
+	//draw(cube1, environment);
 	
 
 	// Draw the instances of grass: the third parameter is the number of instances to display
 	draw(grass, environment, gui.number_of_instances);
+
+	// Draw instances of palm trees on the beach
+	for (int i = 0; i < trees_nb; i++) {
+		trees.model.translation = trees_positions[i];
+		draw(trees, environment);
+	}
 
 
 
@@ -235,7 +257,7 @@ void scene_structure::display_frame()
 		}
 		chrono = timer.t - t_start;
 		ImGui::Text("Chronomètre de la course : %.2f", chrono);
-		std::cout << current_path.size() << std::endl;
+		std::cout << car.model.translation.x << "    " << car.model.translation.y << "     " << evaluate_terrain_height(car.model.translation.x / 2, car.model.translation.y / 2) << std::endl;
 		current_path.push_back(car.model);
 	}
 	else {race_init = false;}
