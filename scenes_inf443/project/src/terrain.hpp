@@ -7,6 +7,10 @@ struct terrain_parameters {
 	//Basic terrain parameters
 	float terrain_length = 200.0f;
 	int terrain_sample = 2000;
+
+	//circuit parameters
+	int number_of_gates = 20;
+	int gap_between_gates = 20;
 	
 	//Perlin noise parameters
 	float persistency = 0.8f;

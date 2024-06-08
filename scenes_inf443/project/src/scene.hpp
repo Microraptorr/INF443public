@@ -4,6 +4,8 @@
 #include "cgp/cgp.hpp"
 #include "environment.hpp"
 #include "terrain.hpp"
+#include "Gate.hpp"
+
 
 // This definitions allow to use the structures: mesh, mesh_drawable, etc. without mentionning explicitly cgp::
 using cgp::mesh;
@@ -57,6 +59,7 @@ struct scene_structure : cgp::scene_inputs_generic {
 	mesh_drawable trees;
 	const int trees_nb = 15;
 	numarray<vec3> trees_positions;
+	Gate* gates;
 
 
 		//parameters used to animate the car
