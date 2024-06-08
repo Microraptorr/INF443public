@@ -28,7 +28,7 @@ struct gui_parameters {
 
 // The structure of the custom scene
 struct scene_structure : cgp::scene_inputs_generic {
-	
+
 	// ****************************** //
 	// Elements and shapes of the scene
 	// ****************************** //
@@ -40,7 +40,7 @@ struct scene_structure : cgp::scene_inputs_generic {
 	environment_structure environment;   // Standard environment controler
 	input_devices inputs;                // Storage for inputs status (mouse, keyboard, window dimension)
 	gui_parameters gui;                  // Standard GUI element storage
-	
+
 	// ****************************** //
 	// Elements and shapes of the scene
 	// ****************************** //
@@ -56,6 +56,9 @@ struct scene_structure : cgp::scene_inputs_generic {
 	mesh_drawable water;
 	mesh_drawable grass;
 	mesh_drawable car;
+	mesh_drawable trees;
+	const int trees_nb = 15;
+	numarray<vec3> trees_positions;
 	Gate* gates;
 
 
