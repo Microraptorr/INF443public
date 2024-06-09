@@ -101,6 +101,7 @@ void scene_structure::initialize()
 	car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
 	ghost_car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
 	ghost_car.material.color = { 0, 1, 0 };
+	ghost_car.material.alpha = 0.5f;
 
 	//gate initialization
 	/*gates = new Gate[16];
@@ -271,11 +272,6 @@ void scene_structure::display_frame()
 	draw(terrain, environment);
 	for (int i = 0; i < 20; i++) {
 		gates[i].draw(environment);
-		if (chrono > 0) {
-			if (gates[i].is_reached(current_path.back().translation, car.model.translation)){std::cout << i << std::endl;}
-			//std::cout << current_path.back().translation.x << std::endl;
-		}
-
 	}
 	
 
@@ -309,14 +305,14 @@ void scene_structure::display_frame()
 			ImGui::Text("Chrono de la course : %.2f", chrono);
 			if (gate_count == 20) {
 				race_finished = true;
-				best_exist = true;
 				t_finish = chrono;
-				if (!best_exist || t_finish < best_time) {
+				if (!best_exist ||  t_finish < best_time) {
 					best_time = t_finish;
 					best_path = current_path;
 					last_is_best = true;
 				}
 				else last_is_best = false;
+				best_exist = true;
 			}
 		}
 		else {
@@ -334,11 +330,11 @@ void scene_structure::display_frame()
 		current_path.push_back(car.model);
 		if (best_exist) {
 			ImGui::Text("Meilleur temps : %.2f", best_time);
-			//if (!race_finished) {
-			//	ghost_car.model = best_path[frame_count % best_path.size()];
-			//	frame_count++;
-			//	draw(ghost_car, environment);
-			//}
+			if (!race_finished) {
+				ghost_car.model = best_path[frame_count % best_path.size()];
+				frame_count++;
+				draw(ghost_car, environment);
+			}
 			
 		}
 	}
@@ -354,10 +350,6 @@ void scene_structure::display_frame()
 	if (gui.display_wireframe) {
 		draw_wireframe(terrain, environment);
 		draw_wireframe(grass, environment, { 0,0,1 }, gui.number_of_instances);
-		/*draw_wireframe(water, environment);
-		draw_wireframe(tree, environment);
-		draw_wireframe(cube1, environment);
-		draw_wireframe(cube2, environment);*/
 	}
 
 	// conditional display of the global frame (set via the GUI)
@@ -368,10 +360,6 @@ void scene_structure::display_frame()
 	// We display the semi-transparent shapes after the non-transparent ones 
 	//   (as semi-transparent shapes are not associated to depth buffer write)
 	display_semiTransparent();
-
-
-
-
 
 }
 
