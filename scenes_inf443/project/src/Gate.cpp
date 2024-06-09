@@ -31,7 +31,7 @@ void Gate::draw(environment_generic_structure const& environment) {
 bool Gate::is_reached(vec3 car_pos,vec3 old_car_pos) {
 	float a = (right.model.translation.y - left.model.translation.y) / (right.model.translation.x - left.model.translation.x);
 	float b = right.model.translation.y - a * right.model.translation.x;
-	float epsilon = 0.1f; // tolerance when checking when it is in between because sometimes, the gates share the same x or the same y
+	float epsilon = 0.25f; // tolerance when checking when it is in between because sometimes, the gates share the same x or the same y
 	bool infinite_line_crossed_nonflipped = (car_pos.y < a * car_pos.x + b) && (old_car_pos.y >= a * old_car_pos.x + b);
 	bool infinite_line_crossed_flipped = (car_pos.y > a * car_pos.x + b) && (old_car_pos.y <= a * old_car_pos.x + b);
 	bool is_between_x = std::min(right.model.translation.x, left.model.translation.x) - epsilon < car_pos.x && car_pos.x < std::max(right.model.translation.x, left.model.translation.x) + epsilon;

@@ -88,9 +88,12 @@ struct scene_structure : cgp::scene_inputs_generic {
 
 		//parameters used to control race mode
 	bool race_init = false;
+	bool race_finished = false;
 	bool best_exist = false; //true if there is already a registered best time. If there is, the ghost will be displayed
+	bool last_is_best = false;
 	float best_time;
 	float t_start;
+	float t_finish;
 	float x_start = - 26.9f;
 	float y_start = -34.6f;
 	float theta_start = Pi / 2;

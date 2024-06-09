@@ -100,6 +100,7 @@ void scene_structure::initialize()
 	//car initialization
 	car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
 	ghost_car.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, car_length / 2));
+	ghost_car.material.color = { 0, 1, 0 };
 
 	//gate initialization
 	/*gates = new Gate[16];
@@ -280,23 +281,65 @@ void scene_structure::display_frame()
 
 		//Animate race mode
 	if (gui.pov_race) {
-		if (!race_init) {
+		if (!race_init) { //initialise all parameters before race start
 			race_init = true;
+			race_finished = false;
+			current_path.clear(); //empty path memory
 			t_start = timer.t + 5.0f;
 			gate_count = 0;
+			frame_count = 0;
 			car.model.translation = { x_start, y_start, evaluate_terrain_height(x_start / 2, y_start / 2) };
 			theta = theta_start;
 			v = 0;
 			v_rch = 0;
 			car_status = "still";
+			for (int i = 0; i < 20; i++) {
+				gates[i].left.material.color = { 1,0,0 }; //reset the correct color of the gates at start of the race
+				gates[i].right.material.color = { 0,0,1 };
+			}
 		}
 		chrono = timer.t - t_start;
-		ImGui::Text("Chrono de la course : %.2f", chrono);
+		ImGui::Text("Portes atteintes %d / 20", gate_count);
+		if (chrono > -3 && gates[(gate_count + 1) % 20].is_reached(current_path.back().translation, car.model.translation)) {
+			gate_count += 1;
+			gates[gate_count % 20].left.material.color = { 1, 1, 1 }; //gates become white to signal the player that he has passed them
+			gates[gate_count % 20].right.material.color = { 1, 1, 1 };
+		}
+		if (!race_finished){
+			ImGui::Text("Chrono de la course : %.2f", chrono);
+			if (gate_count == 20) {
+				race_finished = true;
+				best_exist = true;
+				t_finish = chrono;
+				if (!best_exist || t_finish < best_time) {
+					best_time = t_finish;
+					best_path = current_path;
+					last_is_best = true;
+				}
+				else last_is_best = false;
+			}
+		}
+		else {
+			ImGui::Text("Temps sur ce tour : %.2f", t_finish);
+			if (last_is_best) {
+				ImGui::Text("C'est ton meilleur temps");
+			}
+			else {
+				ImGui::Text("Tu n'as pas fait mieux, essaie encore");
+			}
+			if (chrono > t_finish + 5.0f) race_init = false;
+			ImGui::Text("nouveau depart dans : %.2f", t_finish + 5.0f - chrono);
+		}
+		if (!race_finished)
 		current_path.push_back(car.model);
 		if (best_exist) {
 			ImGui::Text("Meilleur temps : %.2f", best_time);
-			ghost_car.model = best_path[frame_count];
-			frame_count++;
+			//if (!race_finished) {
+			//	ghost_car.model = best_path[frame_count % best_path.size()];
+			//	frame_count++;
+			//	draw(ghost_car, environment);
+			//}
+			
 		}
 	}
 	else {
